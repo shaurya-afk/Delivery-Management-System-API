@@ -20,12 +20,11 @@ const authFedEx = async() => {
 	}
 }
 
-const tracking_number = "039813852990618";
+const tracking_number = "377101283611590";
 
 class FedExTrackingController{
 	static trackFedExTrackingShipment = async(req, res) => {
 		try {
-            const tracking_number = req.body.trackingNumber; // get the number from the request body
 			const authRes = await authFedEx();
 			// input data
 			const inputPayLoad = {
@@ -47,8 +46,10 @@ class FedExTrackingController{
             
 			const response = await axios.post(`${process.env.FEDEX_BASE_API_URL}/track/v1/trackingnumbers`, inputPayLoad, {headers:headers});
 			
+            const trackingDetails = response.data.output.completeTrackResults;
+
             if (response.data && response.data.output && response.data.output.completeTrackResults) {
-				res.send(response.data.output.completeTrackResults);
+				res.send(trackingDetails);
 			} else {
 				res.status(404).send(`Failed to track the FedEx Shipment. Invalid tracking number: ${tracking_number}`);
 			}
