@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FedEx Tracking</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        #trackingForm {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 5px;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #4a4af4;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3a3ad4;
+        }
+        #trackingResult {
+            background-color: #e9e9e9;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FedEx Tracking</h1>
+        <form id="trackingForm">
+            <input type="text" id="trackingNumber" placeholder="Enter tracking number" required>
+            <button type="submit">Track</button>
+        </form>
+        <div id="trackingResult"></div>
+    </div>
+
+    <script>
+        document.getElementById('trackingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const trackingNumber = document.getElementById('trackingNumber').value;
+            const resultDiv = document.getElementById('trackingResult');
+            resultDiv.innerHTML = 'Loading...';
+
+            try {
+                const response = await axios.post('/fedex/track', { trackingNumber });
+                const data = response.data[0];
+
+                if (data && data.trackResults && data.trackResults[0]) {
+                    const result = data.trackResults[0];
+                    const shipperAddress = result.shipperAddress || {};
+                    const recipientAddress = result.recipientAddress || {};
+                    const dateAndTimes = result.dateAndTimes || {};
+                    const latestStatusDetail = result.latestStatusDetail || {};
+
+                    resultDiv.innerHTML = `
+                        <h2>Tracking Information</h2>
+                        <h3>Sender's Details</h3>
+                        <p>${shipperAddress.city || 'N/A'}, ${shipperAddress.stateOrProvinceCode || 'N/A'}, ${shipperAddress.countryCode || 'N/A'}</p>
+                        
+                        <h3>Receiver's Details</h3>
+                        <p>${recipientAddress.city || 'N/A'}, ${recipientAddress.stateOrProvinceCode || 'N/A'}, ${recipientAddress.countryCode || 'N/A'}</p>
+                        
+                        <h3>Pickup Date</h3>
+                        <p>${dateAndTimes.shipTimestamp || 'N/A'}</p>
+                        
+                        <h3>Delivered Date</h3>
+                        <p>${dateAndTimes.deliveryTimestamp || 'Not yet delivered'}</p>
+                        
+                        <h3>Delivery Status</h3>
+                        <p>${latestStatusDetail.description || 'N/A'}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = 'No tracking information found for this number.';
+                }
+            } catch (error) {
+                console.error('Error fetching tracking information:', error);
+                resultDiv.innerHTML = 'Error fetching tracking information. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>
