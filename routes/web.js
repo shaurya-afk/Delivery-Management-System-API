@@ -6,6 +6,7 @@ router.get('/', (req, res) => {
 	res.render("tracking");
 })
 
-router.get("/track", FedExTrackingController.trackFedExTrackingShipment)
+// made the line below to post from get
+router.post("/track", FedExTrackingController.trackFedExTrackingShipment)
 
 export default router
