@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FedEx Tracking</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,7 +54,25 @@
             <input type="text" id="trackingNumber" placeholder="Enter tracking number" required>
             <button type="submit">Track</button>
         </form>
-        <div id="trackingResult"></div>
+        <div id="trackingResult">
+            <% if (typeof senderDetails !== 'undefined') { %>
+                <h2>Tracking Information</h2>
+                <h3>Sender's Details</h3>
+                <p><%= typeof senderDetails === 'object' ? `${senderDetails.city || 'N/A'}, ${senderDetails.stateOrProvinceCode || 'N/A'}, ${senderDetails.countryCode || 'N/A'}` : senderDetails %></p>
+                
+                <h3>Receiver's Details</h3>
+                <p><%= typeof receiverDetails === 'object' ? `${receiverDetails.city || 'N/A'}, ${receiverDetails.stateOrProvinceCode || 'N/A'}, ${receiverDetails.countryCode || 'N/A'}` : receiverDetails %></p>
+                
+                <h3>Pickup Date</h3>
+                <p><%= pickupDate %></p>
+                
+                <h3>Delivered Date</h3>
+                <p><%= deliveredDate %></p>
+                
+                <h3>Delivery Status</h3>
+                <p><%= deliveryStatus %></p>
+            <% } %>
+        </div>
     </div>
 
     <script>
@@ -66,36 +83,37 @@
             resultDiv.innerHTML = 'Loading...';
 
             try {
-                const response = await axios.post('/fedex/track', { trackingNumber });
-                const data = response.data[0];
+                const response = await fetch('/fedex/track', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ trackingNumber }),
+                });
 
-                if (data && data.trackResults && data.trackResults[0]) {
-                    const result = data.trackResults[0];
-                    const shipperAddress = result.shipperAddress || {};
-                    const recipientAddress = result.recipientAddress || {};
-                    const dateAndTimes = result.dateAndTimes || {};
-                    const latestStatusDetail = result.latestStatusDetail || {};
-
-                    resultDiv.innerHTML = `
-                        <h2>Tracking Information</h2>
-                        <h3>Sender's Details</h3>
-                        <p>${shipperAddress.city || 'N/A'}, ${shipperAddress.stateOrProvinceCode || 'N/A'}, ${shipperAddress.countryCode || 'N/A'}</p>
-                        
-                        <h3>Receiver's Details</h3>
-                        <p>${recipientAddress.city || 'N/A'}, ${recipientAddress.stateOrProvinceCode || 'N/A'}, ${recipientAddress.countryCode || 'N/A'}</p>
-                        
-                        <h3>Pickup Date</h3>
-                        <p>${dateAndTimes.shipTimestamp || 'N/A'}</p>
-                        
-                        <h3>Delivered Date</h3>
-                        <p>${dateAndTimes.deliveryTimestamp || 'Not yet delivered'}</p>
-                        
-                        <h3>Delivery Status</h3>
-                        <p>${latestStatusDetail.description || 'N/A'}</p>
-                    `;
-                } else {
-                    resultDiv.innerHTML = 'No tracking information found for this number.';
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <h2>Tracking Information</h2>
+                    <h3>Sender's Details</h3>
+                    <p>${data.senderDetails.city || 'N/A'}, ${data.senderDetails.stateOrProvinceCode || 'N/A'}, ${data.senderDetails.countryCode || 'N/A'}</p>
+                    
+                    <h3>Receiver's Details</h3>
+                    <p>${data.receiverDetails.city || 'N/A'}, ${data.receiverDetails.stateOrProvinceCode || 'N/A'}, ${data.receiverDetails.countryCode || 'N/A'}</p>
+                    
+                    <h3>Pickup Date</h3>
+                    <p>${data.pickupDate}</p>
+                    
+                    <h3>Delivered Date</h3>
+                    <p>${data.deliveredDate}</p>
+                    
+                    <h3>Delivery Status</h3>
+                    <p>${data.deliveryStatus}</p>
+                `;
             } catch (error) {
                 console.error('Error fetching tracking information:', error);
                 resultDiv.innerHTML = 'Error fetching tracking information. Please try again.';
@@ -104,11 +122,3 @@
     </script>
 </body>
 </html>
-
-<!-- Comments on the EJS template:
-1. This is a new file that needs to be created in the views directory
-2. It contains both HTML structure and embedded JavaScript for handling the form submission and displaying results
-3. Uses Axios for making AJAX requests to the server
-4. Styles are included inline for simplicity, but could be moved to a separate CSS file
-5. The form submission is handled client-side to provide a smoother user experience
--->
