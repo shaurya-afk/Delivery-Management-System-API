@@ -5,21 +5,21 @@ import web from "./routes/web.js"
 const app = express();
 const port = process.env.PORT || '8080';
 
-import path from 'path';  // Add this import
-import { fileURLToPath } from 'url';  // Add this import
+import path from 'path';  
+import { fileURLToPath } from 'url';  
 
-const __filename = fileURLToPath(import.meta.url);  // Add this line
-const __dirname = path.dirname(__filename);  // Add this line
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename);  
 
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
-app.set('views', path.join(__dirname, 'views'));  // Add this line
+app.set('views', path.join(__dirname, 'views')); 
 
-app.use(express.json()); // to integrate it with ReactJs -> Later figure out to do with Basics
+app.use(express.json());
 
-app.use(express.urlencoded({ extended: true }));  // Add this line
+app.use(express.urlencoded({ extended: true })); 
 
 // load route
 app.use("/fedex", web);
